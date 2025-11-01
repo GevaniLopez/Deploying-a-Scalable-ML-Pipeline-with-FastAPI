@@ -1,9 +1,10 @@
 import os
-
 import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+from pydantic import ConfigDict
 
+from pathlib import Path
 from ml.data import apply_label, process_data
 from ml.model import inference, load_model
 
@@ -26,24 +27,26 @@ class Data(BaseModel):
     hours_per_week: int = Field(..., example=40, alias="hours-per-week")
     native_country: str = Field(..., example="United-States", alias="native-country")
 
-path = None # TODO: enter the path for the saved encoder 
-encoder = load_model(path)
+    # accept payloads by field name or by alias 
+    model_config = ConfigDict(populate_by_name=True)
 
-path = None # TODO: enter the path for the saved model 
-model = load_model(path)
+# paths to saved artifacts
+PROJECT_DIR = Path(__file__).resolve().parent
+encoder = load_model((PROJECT_DIR / "model" / "encoder.pkl").as_posix())
+model = load_model((PROJECT_DIR / "model" / "model.pkl").as_posix())
+lb = load_model((PROJECT_DIR / "model" / "lb.pkl").as_posix())
 
-# TODO: create a RESTful API using FastAPI
-app = None # your code here
+# FastAPI app
+app = FastAPI()
 
-# TODO: create a GET on the root giving a welcome message
+# GET
 @app.get("/")
 async def get_root():
     """ Say hello!"""
-    # your code here
-    pass
+    return {"message": "Welcome to the income prediction API!"}
 
 
-# TODO: create a POST on a different path that does model inference
+# POST /data/
 @app.post("/data/")
 async def post_inference(data: Data):
     # DO NOT MODIFY: turn the Pydantic model into a dict.
@@ -64,11 +67,16 @@ async def post_inference(data: Data):
         "sex",
         "native-country",
     ]
+
+    # process_data with existing encoder, no training, no lb needed per template
     data_processed, _, _, _ = process_data(
-        # your code here
-        # use data as data input
-        # use training = False
-        # do not need to pass lb as input
+        X=data,
+        categorical_features=cat_features,
+        label=None,
+        training=False,
+        encoder=encoder,
+        lb=lb,
     )
-    _inference = None # your code here to predict the result using data_processed
+
+    _inference = inference(model, data_processed)
     return {"result": apply_label(_inference)}
