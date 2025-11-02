@@ -1,5 +1,3 @@
-import json
-
 import requests
 
 # send a GET using the URL http://127.0.0.1:8000

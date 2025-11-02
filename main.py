@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
@@ -7,6 +6,7 @@ from pydantic import ConfigDict
 from pathlib import Path
 from ml.data import apply_label, process_data
 from ml.model import inference, load_model
+
 
 # DO NOT MODIFY
 class Data(BaseModel):
@@ -25,10 +25,11 @@ class Data(BaseModel):
     capital_gain: int = Field(..., example=0, alias="capital-gain")
     capital_loss: int = Field(..., example=0, alias="capital-loss")
     hours_per_week: int = Field(..., example=40, alias="hours-per-week")
-    native_country: str = Field(..., example="United-States", alias="native-country")
-
-    # accept payloads by field name or by alias 
+    native_country: str = Field(
+        ..., example="United-States", alias="native-country")
+    # accept payloads by field name or by alias
     model_config = ConfigDict(populate_by_name=True)
+
 
 # paths to saved artifacts
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -38,6 +39,7 @@ lb = load_model((PROJECT_DIR / "model" / "lb.pkl").as_posix())
 
 # FastAPI app
 app = FastAPI()
+
 
 # GET
 @app.get("/")
@@ -52,7 +54,8 @@ async def post_inference(data: Data):
     # DO NOT MODIFY: turn the Pydantic model into a dict.
     data_dict = data.dict()
     # DO NOT MODIFY: clean up the dict to turn it into a Pandas DataFrame.
-    # The data has names with hyphens and Python does not allow those as variable names.
+    # The data has names with hyphens and Python does not allow
+    # those as variable names.
     # Here it uses the functionality of FastAPI/Pydantic/etc to deal with this.
     data = {k.replace("_", "-"): [v] for k, v in data_dict.items()}
     data = pd.DataFrame.from_dict(data)
@@ -68,7 +71,8 @@ async def post_inference(data: Data):
         "native-country",
     ]
 
-    # process_data with existing encoder, no training, no lb needed per template
+    # process_data with existing encoder, no training,
+    # no lb needed per template
     data_processed, _, _, _ = process_data(
         X=data,
         categorical_features=cat_features,
