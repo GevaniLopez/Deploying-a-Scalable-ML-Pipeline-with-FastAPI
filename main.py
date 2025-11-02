@@ -41,7 +41,7 @@ lb = load_model((PROJECT_DIR / "model" / "lb.pkl").as_posix())
 app = FastAPI()
 
 
-# GET
+# GET from app
 @app.get("/")
 async def get_root():
     """ Say hello!"""
