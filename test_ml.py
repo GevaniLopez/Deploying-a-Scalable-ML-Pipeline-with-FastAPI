@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from pathlib import Path
+import pytest
 
 from ml.data import process_data
 from ml.model import (
@@ -10,8 +12,17 @@ from ml.model import (
     performance_on_categorical_slice,
 )
 
+CSV_PATH = Path("data/census.csv")
+
+# if raw csv not present, skip tests and resume
+pytestmark = pytest.mark.skipif(
+    not CSV_PATH.exists(),
+    reason="census.csv not available in CI (tracked via DVC)"
+)
+
+
 # Paths and constants
-DATA_PATH = "data/census.csv"
+DATA_PATH = str(CSV_PATH)
 CAT_FEATURES = [
     "workclass",
     "education",
